@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Unit 2 Construction 施工 · 夏老师的小课堂</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: linear-gradient(145deg, #f7e9d7 0%, #d9e2e9 100%);
+            padding: 20px 16px 40px;
+            color: #1a2e3c;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.4rem;
+            font-weight: 800;
+            background: linear-gradient(145deg, #b64516, #5f2b0e);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 30px;
+            text-shadow: 4px 4px 8px rgba(120, 60, 20, 0.2);
+            letter-spacing: 1px;
+        }
+        @media (max-width: 600px) { h1 { font-size: 1.9rem; } }
+
+        .game-section {
+            background: rgba(255, 250, 240, 0.9);
+            backdrop-filter: blur(8px);
+            border-radius: 48px;
+            padding: 28px 24px;
+            margin-bottom: 40px;
+            box-shadow: 0 20px 35px -5px rgba(60, 40, 20, 0.25);
+            border: 2px solid #e7cba5;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 24px;
+            border-left: 16px solid #d97706;
+            padding-left: 24px;
+            color: #4a2c1a;
+            text-shadow: 2px 2px 0 #f1d5ae;
+        }
+        @media (max-width: 600px) { .section-title { font-size: 1.5rem; } }
+
+        .control-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px 16px;
+            margin-bottom: 24px;
+            background: #b87c4c;
+            padding: 14px 22px;
+            border-radius: 60px;
+            box-shadow: inset 0 2px 5px #4f2e17, 0 6px 0 #6f3f1c;
+            border: 1px solid #eebb7c;
+        }
+
+        .timer {
+            font-family: monospace;
+            font-size: 1.7rem;
+            font-weight: 800;
+            background: #1f3a3f;
+            color: #fbe4b8;
+            padding: 8px 24px;
+            border-radius: 50px;
+            box-shadow: inset 0 -3px 0 #0a1a1e, 0 4px 0 #0e2327;
+            letter-spacing: 2px;
+        }
+
+        .btn {
+            background: #fbe9c3;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 0 5px 0 #b2783c;
+            cursor: pointer;
+            transition: all 0.1s;
+            border: 1px solid #ffd58c;
+            color: #302010;
+        }
+        .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #9e6a30; }
+        .btn.primary { background: #ffae3c; box-shadow: 0 5px 0 #b4641a; color: #1f2a36; border-color: #ffcf7a; }
+
+        .score-board {
+            display: flex;
+            gap: 30px;
+            font-weight: 800;
+            font-size: 1.3rem;
+        }
+        .player-badge {
+            padding: 8px 24px;
+            border-radius: 50px;
+            background: #cfb595;
+            box-shadow: inset 0 2px 5px #5e3f26, 0 4px 0 #7b5838;
+            color: #141c23;
+            transition: all 0.2s;
+            border: 1px solid #fad6a5;
+        }
+        .player-active {
+            background: #fbb13c;
+            box-shadow: 0 0 0 5px #fee2b5, inset 0 2px 5px #b35103;
+            transform: scale(1.03);
+            color: #1c1408;
+        }
+
+        /* 图片网格与文字列容器 */
+        .match-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: stretch;
+        }
+        .image-area {
+            flex: 2.2;
+            min-width: 260px;
+        }
+        .text-area {
+            flex: 1.5;
+            min-width: 200px;
+        }
+
+        .image-grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+        }
+        .text-column {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            height: 100%;
+            justify-content: space-between;
+        }
+
+        /* 图片卡片 */
+        .image-card {
+            background: #fcf3e0;
+            border-radius: 24px;
+            padding: 12px 8px;
+            box-shadow: 0 8px 0 #b68b54, 0 4px 12px rgba(0,0,0,0.1);
+            border: 2px solid #efcd9c;
+            aspect-ratio: 1 / 0.9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        .image-card.selected {
+            box-shadow: 0 0 0 6px #ff9f2e, 0 8px 0 #a7681f;
+            transform: scale(0.98);
+            background: #fff4e5;
+        }
+        .image-card img {
+            max-width: 94%;
+            max-height: 94%;
+            object-fit: contain;
+            border-radius: 16px;
+        }
+
+        /* 文字卡片 (任务1) */
+        .text-card {
+            background: #efe1c6;
+            border-radius: 22px;
+            padding: 10px 12px;
+            box-shadow: 0 6px 0 #a58357, 0 3px 8px rgba(0,0,0,0.1);
+            border: 2px solid #dbbd92;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.1s;
+            word-break: break-word;
+            min-height: 70px;
+            color: #2d2416;
+        }
+        .text-card.selected {
+            box-shadow: 0 0 0 6px #2a9d8f, 0 6px 0 #1e6b5e;
+            background: #d4f0ec;
+        }
+        .text-card.matched {
+            font-weight: 900;
+            font-size: 1.3rem;
+            background: #bcd9b2;
+            box-shadow: 0 6px 0 #608a4a;
+            border-color: #9bc184;
+        }
+
+        /* 安全标识文字卡片 (任务4) 更小巧 */
+        .safety-text-card {
+            background: #efe1c6;
+            border-radius: 18px;
+            padding: 8px 8px;
+            box-shadow: 0 5px 0 #a58357, 0 2px 6px rgba(0,0,0,0.1);
+            border: 2px solid #dbbd92;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.1s;
+            color: #2d2416;
+        }
+        .safety-text-card.selected {
+            box-shadow: 0 0 0 6px #e76f51, 0 5px 0 #b1523a;
+            background: #ffe1d4;
+        }
+        .keyword {
+            font-weight: 900;
+            font-size: 1rem;
+            background: #9c4221;
+            color: #fbeec9;
+            padding: 6px 4px;
+            border-radius: 30px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .safety-text-card small {
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        /* 任务2拖拽区 */
+        .drag-area { display: flex; flex-wrap: wrap; gap: 20px; }
+        .word-pool {
+            display: flex; flex-wrap: wrap; gap: 14px; background: #ddcbb0;
+            padding: 22px; border-radius: 40px; min-height: 150px;
+            box-shadow: inset 0 4px 8px #ad8f6c, 0 6px 0 #876e4f;
+        }
+        .drag-word {
+            background: #ffd89c; padding: 14px 20px; border-radius: 50px;
+            font-weight: 700; box-shadow: 0 6px 0 #bd8b44; cursor: grab;
+            user-select: none; border: 2px solid #ffc576; color: #2b1f0e;
+        }
+        .category-box {
+            flex: 1 1 240px; background: #c9af87; border-radius: 36px;
+            padding: 22px 18px; min-height: 240px; border: 4px dashed #5f794b;
+            box-shadow: inset 0 2px 8px #836e4e, 0 8px 0 #6e543a;
+        }
+        .category-title { font-weight: 800; font-size: 1.5rem; margin-bottom: 18px; text-align: center; color: #1d3420; }
+        .dropzone { display: flex; flex-wrap: wrap; gap: 12px; min-height: 160px; }
+        .placed-word {
+            background: #b1cf9a; padding: 10px 16px; border-radius: 40px;
+            font-weight: 700; box-shadow: inset 0 2px 4px #4d6b38, 0 3px 0 #567d3a;
+            border: 1px solid #90b076; color: #192412;
+        }
+
+        /* 任务3 */
+        .sentence-sort { display: flex; flex-wrap: wrap; gap: 20px; }
+        .sentences-left { flex: 2; min-width: 260px; display: flex; flex-direction: column; gap: 14px; }
+        .sentence-item {
+            background: #ffddb0; padding: 20px 18px; border-radius: 30px;
+            font-weight: 600; box-shadow: 0 7px 0 #bc8a4a; cursor: grab;
+            border: 2px solid #feca7a; color: #342415;
+        }
+        .slots-right { flex: 2; display: flex; flex-direction: column; gap: 14px; }
+        .slot {
+            background: #dac29c; border-radius: 30px; padding: 18px; min-height: 110px;
+            border: 4px dashed #6b8c5c; display: flex; align-items: center;
+            font-weight: 600; color: #1f2f16; box-shadow: inset 0 3px 8px #a3895e;
+        }
+        .slot.filled {
+            border-style: solid; background: #b8d0a4;
+            font-weight: 800; font-size: 1.2rem; box-shadow: inset 0 2px 6px #5e7943;
+        }
+
+        .footer-note { margin-top: 30px; font-weight: 600; color: #3f2c18; text-shadow: 1px 1px #eedbba; }
+    </style>
+</head>
+<body>
+<h1>🏗️ Unit 2 Construction 施工 <span style="font-size:1.8rem;">(夏老师的小课堂)</span></h1>
+
+<!-- 任务1 图片文字配对 (单列文字，框更小，与图片区对齐) -->
+<section class="game-section" id="task1">
+    <div class="section-title">📌 Task 1: construction operations 施工作业</div>
+    <div class="control-bar">
+        <div class="timer" id="timer1">00:00</div>
+        <button class="btn" id="reset1">🔄 重置</button>
+        <span style="margin-left:auto; font-weight:700; color:#fbeec2;">点击图片↔文字配对</span>
+    </div>
+    <div class="match-row">
+        <div class="image-area">
+            <div class="image-grid-3" id="imageGrid1"></div>
+        </div>
+        <div class="text-area">
+            <div class="text-column" id="textCol1"></div>
+        </div>
+    </div>
+    <p style="margin-top:20px; color:#3e2c14; font-weight:500;">✨ 图片文件名：image1.png ~ image9.png (放置于同级目录)</p>
+</section>
+
+<!-- 任务2 拖拽分类 -->
+<section class="game-section" id="task2">
+    <div class="section-title">🧱 Task 2: building materials & construction machinery</div>
+    <div class="control-bar">
+        <div class="timer" id="timer2">00:00</div>
+        <div style="display:flex; gap:8px;">
+            <button class="btn primary" id="start2">▶ 开始</button>
+            <button class="btn" id="pause2">⏸️ 暂停</button>
+            <button class="btn" id="continue2">⏵ 继续</button>
+            <button class="btn" id="reset2">🔄 重置</button>
+        </div>
+        <div style="margin-left:auto; font-weight:800; color:#f7e5ba;">得分: <span id="score2">0</span></div>
+    </div>
+    <div class="drag-area"><div class="word-pool" id="wordPool2"></div></div>
+    <div style="display:flex; gap:20px; flex-wrap:wrap; margin-top:24px;">
+        <div class="category-box"><div class="category-title">🧱 Building Materials</div><div class="dropzone" id="dropMaterials"></div></div>
+        <div class="category-box"><div class="category-title">🚜 Construction Machinery</div><div class="dropzone" id="dropMachinery"></div></div>
+    </div>
+</section>
+
+<!-- 任务3 句子排序 -->
+<section class="game-section" id="task3">
+    <div class="section-title">📝 Task 3: put sentences in order 句子排序</div>
+    <div class="control-bar">
+        <div class="timer" id="timer3">00:00</div>
+        <button class="btn" id="reset3">🔄 重置 & 打乱</button>
+    </div>
+    <div class="sentence-sort">
+        <div class="sentences-left" id="sentencesContainer"></div>
+        <div class="slots-right" id="slotsContainer"></div>
+    </div>
+</section>
+
+<!-- 任务4 PK安全标识 (单列文字，框更小) -->
+<section class="game-section" id="task4">
+    <div class="section-title">⚠️ Task 4: construction safety signs (2 Players PK)</div>
+    <div class="control-bar">
+        <div class="timer" id="timer4">00:00</div>
+        <button class="btn" id="restart4">🔄 重新开始</button>
+        <button class="btn" id="toggleTimer4">⏯️ 计时</button>
+        <div class="score-board">
+            <span class="player-badge" id="player1Badge">👤 Player 1: <span id="scoreP1">0</span></span>
+            <span class="player-badge" id="player2Badge">👤 Player 2: <span id="scoreP2">0</span></span>
+        </div>
+    </div>
+    <div class="match-row">
+        <div class="image-area">
+            <div class="image-grid-3" id="imageGrid4"></div>
+        </div>
+        <div class="text-area">
+            <div class="text-column" id="textCol4"></div>
+        </div>
+    </div>
+    <p style="margin-top:20px; color:#3e2c14; font-weight:500;">🖼️ 图片文件名: authorized.png, caution.png, safety_glasses.png, keep_out.png, open_pit.png, excuse.png, excavation.png, falling.png, closed.png</p>
+</section>
+
+<div class="footer-note">⭐ 全部配对/分类/排序成功均有烟花+音效。手机/电脑适配。</div>
+
+<script>
+    (function(){
+        "use strict";
+
+        // 音效与烟花
+        function fireConfetti() {
+            confetti({ particleCount:180, spread:100, origin: { y:0.6 }, colors: ['#f6ae2d','#f26419','#2f9e79'] });
+            confetti({ particleCount:120, spread:90, origin: { y:0.5, x:0.3 }, colors: ['#4c9a8a','#d4963f'] });
+            confetti({ particleCount:120, spread:90, origin: { y:0.5, x:0.7 }, colors: ['#c44536','#e2c290'] });
+        }
+        function playSound(type='success') {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                if(type==='beep') { osc.frequency.value = 880; gain.gain.setValueAtTime(0.15, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime+0.15); osc.start(); osc.stop(audioCtx.currentTime+0.15); }
+                else if(type==='success') { osc.frequency.value = 660; gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime+0.4); osc.start(); osc.stop(audioCtx.currentTime+0.3); setTimeout(()=>{ const osc2=audioCtx.createOscillator(); osc2.frequency.value=880; const g2=audioCtx.createGain(); osc2.connect(g2); g2.connect(audioCtx.destination); g2.gain.setValueAtTime(0.15,audioCtx.currentTime); osc2.start(); osc2.stop(audioCtx.currentTime+0.25); },150); }
+                else if(type==='switch') { osc.frequency.value = 520; gain.gain.setValueAtTime(0.2, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime+0.08); }
+                audioCtx.resume();
+            } catch(e) {}
+        }
+
+        class GameTimer {
+            constructor(el) { this.display=el; this.seconds=0; this.interval=null; this.running=false; }
+            start() { if(!this.running){ this.running=true; this.interval=setInterval(()=>{ this.seconds++; this.updateDisplay(); },1000); } }
+            pause() { if(this.running){ clearInterval(this.interval); this.running=false; } }
+            reset() { this.pause(); this.seconds=0; this.updateDisplay(); }
+            continue() { this.start(); }
+            toggle() { this.running? this.pause() : this.start(); }
+            updateDisplay() { const m=Math.floor(this.seconds/60); const s=this.seconds%60; this.display.textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`; }
+        }
+
+        function shuffle(arr) { for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+
+        // ---------- 任务1 ----------
+        const imageNames = ['image1','image2','image3','image4','image5','image6','image7','image8','image9'];
+        const textPairs = [
+            'earth-moving 土方工程','foundation treatment 地基处理','three connections and one leveling 三通一平',
+            'steel erection 钢结构架设','Concrete pouring 混凝土浇筑','Water supply and drainage installation 给排水安装工程',
+            'electrical installation 电气安装','decoration and finishing 装饰装修','completion acceptance 竣工验收'
+        ];
+        let task1Selected = null, task1Matched = new Array(9).fill(false), task1Images = [], task1Texts = [];
+        const timer1 = new GameTimer(document.getElementById('timer1')); timer1.start();
+
+        function renderTask1() {
+            const imgGrid = document.getElementById('imageGrid1'), txtCol = document.getElementById('textCol1');
+            const indices = Array.from({length:9},(_,i)=>i);
+            const shuf = shuffle([...indices]);
+            task1Images = shuf.map(i=> ({ name: imageNames[i], pairIndex: i }));
+            task1Texts = indices.map(i=> ({ text: textPairs[i], pairIndex: i }));
+            imgGrid.innerHTML = ''; txtCol.innerHTML = '';
+            task1Images.forEach((img,idx)=>{
+                const card=document.createElement('div'); card.className='image-card'; card.dataset.index=idx; card.dataset.pair=img.pairIndex;
+                const imgEl=document.createElement('img'); imgEl.src=`${img.name}.png`; imgEl.alt=img.name;
+                card.appendChild(imgEl); card.onclick=()=>task1HandleClick('image',idx); imgGrid.appendChild(card);
+            });
+            task1Texts.forEach((t,idx)=>{
+                const card=document.createElement('div'); card.className='text-card'; card.dataset.index=idx; card.dataset.pair=t.pairIndex;
+                card.textContent=t.text; if(task1Matched[t.pairIndex]) card.classList.add('matched');
+                card.onclick=()=>task1HandleClick('text',idx); txtCol.appendChild(card);
+            });
+        }
+        function task1HandleClick(type, idx){
+            const pair = type==='image'? task1Images[idx].pairIndex : task1Texts[idx].pairIndex;
+            if(task1Matched[pair]) return;
+            const currentEl = type==='image'? document.querySelector(`#imageGrid1 .image-card[data-index="${idx}"]`) : document.querySelector(`#textCol1 .text-card[data-index="${idx}"]`);
+            if(!task1Selected){
+                task1Selected = {type, idx, pair}; currentEl.classList.add('selected');
+            } else {
+                const prev = task1Selected;
+                const prevPair = prev.type==='image'? task1Images[prev.idx]?.pairIndex : task1Texts[prev.idx]?.pairIndex;
+                const prevEl = prev.type==='image'? document.querySelector(`#imageGrid1 .image-card[data-index="${prev.idx}"]`) : document.querySelector(`#textCol1 .text-card[data-index="${prev.idx}"]`);
+                prevEl.classList.remove('selected');
+                if(prev.type !== type && prevPair === pair && !task1Matched[pair]){
+                    task1Matched[pair] = true; renderTask1();
+                    if(task1Matched.every(v=>v)) { fireConfetti(); playSound('success'); }
+                }
+                task1Selected = null;
+            }
+        }
+        document.getElementById('reset1').addEventListener('click',()=>{ task1Matched.fill(false); task1Selected=null; timer1.reset(); timer1.start(); renderTask1(); });
+        renderTask1();
+
+        // ---------- 任务2 ----------
+        const materials = ['concrete','steel','wood','cement','aluminum','plastics','stone','brick','composite','bamboo','Gypsum board','glass','bitumen','sand','acoustic wool','coating','rebar','tile'];
+        const machinery = ['tower crane','hoist','elevator','conveyor belt','bulldozer','excavator','road roller','drilling machine','concrete mixer','shovel'];
+        let task2Words = [], score2 = 0; const timer2 = new GameTimer(document.getElementById('timer2')); let task2Active = true;
+        function initTask2() { task2Words = shuffle([...materials.map(w=>({text:w, cat:'material'})), ...machinery.map(w=>({text:w, cat:'machinery'}))]); renderTask2(); }
+        function renderTask2() {
+            const pool = document.getElementById('wordPool2'); pool.innerHTML = '';
+            task2Words.forEach((w,idx)=> { if(!w.placed) { const span=document.createElement('span'); span.className='drag-word'; span.draggable=task2Active; span.textContent=w.text; span.dataset.index=idx; span.dataset.cat=w.cat; span.ondragstart=e=>{ if(!task2Active) e.preventDefault(); else e.dataTransfer.setData('text/plain', idx); }; pool.appendChild(span); }});
+            document.querySelectorAll('.dropzone').forEach(z=>z.innerHTML='');
+            task2Words.forEach((w)=>{ if(w.placed) { const el=document.createElement('span'); el.className='placed-word'; el.textContent=w.text; if(w.cat==='material') document.getElementById('dropMaterials').appendChild(el); else document.getElementById('dropMachinery').appendChild(el); }});
+        }
+        function handleDrop(e, cat){ e.preventDefault(); if(!task2Active) return; const idx=e.dataTransfer.getData('text/plain'); if(!idx) return; const w=task2Words[idx]; if(w.placed) return; if(w.cat===cat){ w.placed=true; score2+=10; document.getElementById('score2').textContent=score2; renderTask2(); if(task2Words.every(w=>w.placed)){ fireConfetti(); playSound('success'); } } }
+        document.getElementById('dropMaterials').addEventListener('dragover',e=>e.preventDefault()); document.getElementById('dropMachinery').addEventListener('dragover',e=>e.preventDefault());
+        document.getElementById('dropMaterials').addEventListener('drop',e=>handleDrop(e,'material')); document.getElementById('dropMachinery').addEventListener('drop',e=>handleDrop(e,'machinery'));
+        document.getElementById('start2').onclick=()=>{ task2Active=true; timer2.start(); renderTask2(); };
+        document.getElementById('pause2').onclick=()=>{ task2Active=false; timer2.pause(); renderTask2(); };
+        document.getElementById('continue2').onclick=()=>{ task2Active=true; timer2.continue(); renderTask2(); };
+        document.getElementById('reset2').onclick=()=>{ task2Words.forEach(w=>w.placed=false); score2=0; document.getElementById('score2').textContent='0'; timer2.reset(); task2Active=true; initTask2(); timer2.start(); };
+        initTask2(); timer2.start();
+
+        // ---------- 任务3 ----------
+        const sentences = [
+            "The construction must strictly follow the design drawings, so that the building can achieve the set goals within the required time at the expected cost.",
+            "Construction operations are usually classified according to specialized fields.",
+            "These include construction site preparation, earth-moving, foundation treatment, steel erection, concrete placement, site cleaning, etc.",
+            "“Three connections and one leveling” assures that the construction site has access to water and electricity, and the site shall be leveled before the project starts.",
+            "Generally, construction machinery is classified according to its functions, such as lifting equipment: cranes or hoists, elevators and conveyors belts, etc."
+        ];
+        let task3Sentences = []; const timer3 = new GameTimer(document.getElementById('timer3'));
+        function initTask3() { task3Sentences = shuffle(sentences.map((s,idx)=>({text:s, correctIndex:idx}))); renderTask3(); }
+        function renderTask3() {
+            const left=document.getElementById('sentencesContainer'); left.innerHTML='';
+            task3Sentences.filter(s=>!s.placed).forEach(s=>{ const div=document.createElement('div'); div.className='sentence-item'; div.draggable=true; div.textContent=s.text; div.dataset.originalIndex=task3Sentences.indexOf(s); div.ondragstart=e=>e.dataTransfer.setData('text/plain', task3Sentences.indexOf(s)); left.appendChild(div); });
+            const slots=document.getElementById('slotsContainer'); slots.innerHTML='';
+            for(let i=0;i<5;i++) {
+                const slot=document.createElement('div'); slot.className='slot'; slot.dataset.slotIndex=i;
+                const placed = task3Sentences.find(s=>s.placed && s.placedSlot===i);
+                if(placed) { slot.classList.add('filled'); slot.innerHTML=`<span>${placed.text}</span>`; } else { slot.textContent=` slot ${i+1} `; }
+                slot.addEventListener('dragover',e=>e.preventDefault());
+                slot.addEventListener('drop',e=>{ e.preventDefault(); const idx=e.dataTransfer.getData('text/plain'); if(idx===null) return; const s=task3Sentences[idx]; if(s.placed) return; if(s.correctIndex===i){ s.placed=true; s.placedSlot=i; renderTask3(); if(task3Sentences.every(s=>s.placed)){ fireConfetti(); playSound('success'); } } });
+                slots.appendChild(slot);
+            }
+        }
+        timer3.start(); document.getElementById('reset3').onclick=()=>{ task3Sentences.forEach(s=>{s.placed=false; s.placedSlot=null;}); timer3.reset(); timer3.start(); initTask3(); }; initTask3();
+
+        // ---------- 任务4 PK ----------
+        const safetyImages = ['authorized','caution','safety_glasses','keep_out','open_pit','excuse','excavation','falling','closed'];
+        const safetyTexts = [
+            {kw:'AUTHORIZED PERSONNEL ONLY', full:'Danger, construction area, authorized personnel only. 危险！施工现场！仅授权人员可以进入。'},
+            {kw:'CAUTION', full:'Caution, construction area. 注意，施工区域！'},
+            {kw:'SAFETY GLASSES', full:'Warning! To reduce risk of injury, wear hard hat, safety glasses, safety shoe. 警示！必须佩戴安全帽、护目镜、安全鞋。'},
+            {kw:'KEEP OUT', full:'Danger, stop, keep out. 危险，施工作业中 止步！禁止进入！'},
+            {kw:'OPEN PIT', full:'Open pit, proceed with caution. 明坑，谨慎前行。'},
+            {kw:'EXCUSE', full:'please excuse our appearance. 对于施工所造成的不便，我们深表歉意。'},
+            {kw:'EXCAVATION', full:'keep back, deep excavation. 止步！前有深坑。'},
+            {kw:'FALLING', full:'worker above, watch for falling material. 高空作业，注意坠物！'},
+            {kw:'CLOSED', full:'walkway closed. 人行道关闭，请绕道。'}
+        ];
+        let task4Images=[], task4Texts=[], task4Matched=Array(9).fill(false);
+        let currentPlayer=1, scores=[0,0], task4Selected=null;
+        const timer4 = new GameTimer(document.getElementById('timer4')); timer4.start();
+        function updatePlayerUI(){
+            document.getElementById('scoreP1').textContent=scores[0]; document.getElementById('scoreP2').textContent=scores[1];
+            document.getElementById('player1Badge').classList.toggle('player-active', currentPlayer===1);
+            document.getElementById('player2Badge').classList.toggle('player-active', currentPlayer===2);
+        }
+        function switchPlayer(){ currentPlayer = currentPlayer===1?2:1; playSound('switch'); updatePlayerUI(); }
+        function renderTask4() {
+            const imgGrid=document.getElementById('imageGrid4'), txtCol=document.getElementById('textCol4');
+            const idxArr = Array.from({length:9},(_,i)=>i); const shuf=shuffle([...idxArr]);
+            task4Images = shuf.map(i=>({name:safetyImages[i], pair:i}));
+            task4Texts = idxArr.map(i=>({...safetyTexts[i], pair:i}));
+            imgGrid.innerHTML=''; txtCol.innerHTML='';
+            task4Images.forEach((img,idx)=>{
+                const card=document.createElement('div'); card.className='image-card'; card.dataset.index=idx; card.dataset.pair=img.pair;
+                const imgEl=document.createElement('img'); imgEl.src=`${img.name}.png`; imgEl.alt=img.name;
+                card.appendChild(imgEl); card.onclick=()=>task4Handle('image',idx); imgGrid.appendChild(card);
+            });
+            task4Texts.forEach((t,idx)=>{
+                const card=document.createElement('div'); card.className='safety-text-card'; card.dataset.index=idx; card.dataset.pair=t.pair;
+                card.innerHTML=`<div class="keyword">${t.kw}</div><small>${t.full}</small>`;
+                if(task4Matched[t.pair]) { card.style.background='#bcd9b2'; card.style.fontWeight='bold'; }
+                card.onclick=()=>task4Handle('text',idx); txtCol.appendChild(card);
+            });
+        }
+        function task4Handle(type,idx){
+            const pair = type==='image'? task4Images[idx].pair : task4Texts[idx].pair;
+            if(task4Matched[pair]) return;
+            if(!task4Selected){
+                task4Selected = {type, idx, pair};
+                document.querySelectorAll('.image-card, .safety-text-card').forEach(c=>c.classList.remove('selected'));
+                const el = type==='image'? document.querySelector(`#imageGrid4 .image-card[data-index="${idx}"]`) : document.querySelector(`#textCol4 .safety-text-card[data-index="${idx}"]`);
+                el.classList.add('selected');
+            } else {
+                const prev = task4Selected;
+                const prevPair = prev.type==='image'? task4Images[prev.idx]?.pair : task4Texts[prev.idx]?.pair;
+                document.querySelectorAll('.selected').forEach(c=>c.classList.remove('selected'));
+                if(prev.type !== type && prevPair === pair && !task4Matched[pair]){
+                    task4Matched[pair] = true; scores[currentPlayer-1]++; updatePlayerUI(); renderTask4();
+                    if(task4Matched.every(v=>v)){ fireConfetti(); playSound('success'); }
+                } else { switchPlayer(); }
+                task4Selected = null;
+            }
+        }
+        document.getElementById('restart4').addEventListener('click',()=>{ task4Matched.fill(false); scores=[0,0]; currentPlayer=1; task4Selected=null; timer4.reset(); timer4.start(); renderTask4(); updatePlayerUI(); });
+        document.getElementById('toggleTimer4').addEventListener('click',()=> timer4.toggle());
+        renderTask4(); updatePlayerUI();
+    })();
+</script>
+</body>
+</html>
